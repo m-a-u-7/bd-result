@@ -35,13 +35,25 @@ app.get('/captcha', async (req, res) => {
 
 app.post('/get-result', async (req, res) => {
   try {
-    const data = new URLSearchParams(req.body).toString();
+    const { roll } = req.body;
+
+    if (!roll) {
+      return res.status(400).json({ error: 'Roll number is required' });
+    }
+
+    const data = new URLSearchParams({ roll }).toString();
+
     const response = await client.post('https://eboardresults.com/v2/getres', data, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Referer': 'https://eboardresults.com/v2/home?lang=en'
       }
     });
+
+    if (!response.data || Object.keys(response.data).length === 0) {
+      return res.status(404).json({ error: 'Result not found with provided roll number' });
+    }
+
     res.json(response.data);
   } catch (error) {
     res.status(500).json({ error: 'Result fetch failed', detail: error.message });
