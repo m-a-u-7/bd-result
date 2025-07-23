@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Result Checker</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -20,8 +20,7 @@
       </div>
       <div>
         <label class="block mb-1">Year</label>
-        <select name="year" class="w-full border p-2 rounded" required id="yearSelect">
-        </select>
+        <select name="year" class="w-full border p-2 rounded" required id="yearSelect"></select>
       </div>
       <div>
         <label class="block mb-1">Board</label>
@@ -49,43 +48,54 @@
       </div>
       <div id="rollField">
         <label class="block mb-1">Roll</label>
-        <input name="roll" class="w-full border p-2 rounded" required>
+        <input name="roll" class="w-full border p-2 rounded" required />
       </div>
       <div id="regField">
         <label class="block mb-1">Registration No</label>
-        <input name="reg" class="w-full border p-2 rounded" required>
+        <input name="reg" class="w-full border p-2 rounded" required />
       </div>
       <div id="eiinField" class="hidden">
         <label class="block mb-1">EIIN</label>
-        <input name="eiin" class="w-full border p-2 rounded">
+        <input name="eiin" class="w-full border p-2 rounded" />
       </div>
       <div id="centerField" class="hidden">
         <label class="block mb-1">Center Code</label>
-        <input name="ccode" class="w-full border p-2 rounded">
+        <input name="ccode" class="w-full border p-2 rounded" />
       </div>
       <div id="districtField" class="hidden">
         <label class="block mb-1">District Code</label>
-        <input name="dcode" class="w-full border p-2 rounded">
+        <input name="dcode" class="w-full border p-2 rounded" />
       </div>
       <div>
         <label class="block mb-1">CAPTCHA</label>
         <div class="flex items-center space-x-3">
-          <img id="captchaImg" class="h-10 w-28 rounded border cursor-pointer" title="Click to reload">
-          <input name="captcha" class="border p-2 rounded w-full" required>
+          <img
+            id="captchaImg"
+            class="h-10 w-28 rounded border cursor-pointer"
+            title="Click to reload"
+          />
+          <input name="captcha" class="border p-2 rounded w-full" required />
         </div>
       </div>
-      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Submit</button>
+      <button
+        type="submit"
+        class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+      >
+        Submit
+      </button>
     </form>
     <pre id="output" class="mt-4 text-sm whitespace-pre-wrap text-gray-700"></pre>
   </div>
 
   <script>
-    const API_BASE = 'https://bd-result-roll.onrender.com';
+    const API_BASE = 'https://bd-result-roll.onrender.com'; // তোমার backend URL
+
     const yearSelect = document.getElementById('yearSelect');
     const resultType = document.getElementById('resultType');
     const captchaImg = document.getElementById('captchaImg');
     const output = document.getElementById('output');
 
+    // বছরগুলো ডাইনামিক অ্যাড করো
     const currentYear = new Date().getFullYear();
     for (let y = currentYear; y >= 2000; y--) {
       const opt = document.createElement('option');
@@ -93,22 +103,22 @@
       yearSelect.appendChild(opt);
     }
 
+    // reg ফিল্ডের visibility ও disabled toggle করার ফাংশন
     function updateFields() {
       const type = resultType.value;
       const regField = document.getElementById('regField');
       const regInput = regField.querySelector('input[name="reg"]');
 
-      // Roll field visibility always for individual
       document.getElementById('rollField').classList.toggle('hidden', type !== '1');
 
       if (type === '1') {
-        // Individual result: hide reg field & remove required
         regField.classList.add('hidden');
         regInput.required = false;
+        regInput.disabled = true; // disabled input ফর্মে যাবে না
       } else {
-        // Other types: show reg field & make required
         regField.classList.remove('hidden');
         regInput.required = true;
+        regInput.disabled = false;
       }
 
       document.getElementById('eiinField').classList.toggle('hidden', type !== '2');
@@ -117,6 +127,7 @@
     }
 
     resultType.addEventListener('change', updateFields);
+
     window.addEventListener('load', () => {
       updateFields();
       captchaImg.src = API_BASE + '/captcha?t=' + Date.now();
@@ -132,13 +143,17 @@
 
       const formData = new FormData(e.target);
       const payload = {};
+
+      // শুধুমাত্র non-disabled এবং non-empty ইনপুট পাঠাও
       formData.forEach((val, key) => {
-        payload[key] = val;
+        if (val.trim() !== '') {
+          payload[key] = val;
+        }
       });
 
-      // Individual result হলে reg ফিল্ড বাদ দিন
-      if (payload.result_type === '1') {
-        delete payload.reg;
+      if (!payload.captcha) {
+        output.textContent = '⚠️ Please enter the CAPTCHA.';
+        return;
       }
 
       try {
@@ -149,11 +164,14 @@
         });
 
         const data = await res.json();
-        output.textContent = data.error ? '❌ Error: ' + data.error : JSON.stringify(data, null, 2);
+        output.textContent = data.error
+          ? '❌ Error: ' + data.error
+          : JSON.stringify(data, null, 2);
       } catch (err) {
         output.textContent = '⚠️ Failed to fetch result.';
       }
     });
   </script>
 </body>
-</html>
+                                                 </html>
+                                                 
