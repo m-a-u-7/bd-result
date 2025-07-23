@@ -1,8 +1,10 @@
+// server.js
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 const { wrapper } = require('axios-cookiejar-support');
 const { CookieJar } = require('tough-cookie');
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -18,6 +20,7 @@ let cookieSet = false;
 app.get('/captcha', async (req, res) => {
   try {
     if (!cookieSet) {
+      // প্রথমবার হোম পেজ থেকে কুকি সেট করানো
       await client.get('https://eboardresults.com/v2/home');
       cookieSet = true;
     }
@@ -35,13 +38,10 @@ app.get('/captcha', async (req, res) => {
 
 app.post('/get-result', async (req, res) => {
   try {
-    const { roll } = req.body;
-
-    if (!roll) {
-      return res.status(400).json({ error: 'Roll number is required' });
-    }
-
-    const data = new URLSearchParams({ roll }).toString();
+    // POST ডেটা ফর্ম-ইনকোডেড ফরম্যাটে রূপান্তর
+    // এখানে req.body এর মধ্যে roll, exam, board, year, captcha ইত্যাদি থাকবে
+    // reg কোনভাবেই পাঠানো হবে না (ফ্রন্ট থেকে যাবে না)
+    const data = new URLSearchParams(req.body).toString();
 
     const response = await client.post('https://eboardresults.com/v2/getres', data, {
       headers: {
@@ -49,10 +49,6 @@ app.post('/get-result', async (req, res) => {
         'Referer': 'https://eboardresults.com/v2/home?lang=en'
       }
     });
-
-    if (!response.data || Object.keys(response.data).length === 0) {
-      return res.status(404).json({ error: 'Result not found with provided roll number' });
-    }
 
     res.json(response.data);
   } catch (error) {
